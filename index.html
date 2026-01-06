@@ -16,8 +16,6 @@
 <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; font-family: 'Roboto', sans-serif;}
-html, body {width: 100%;height: 100%;margin: 0;padding: 0;overflow: hidden;}
-#app, .app, main {width: 100vw;height: 100vh;}
 body { background:#f2f2f2; color:#333; min-height:100vh; overflow-x:hidden; scroll-behavior:smooth; transition: background 0.3s, color 0.3s;}
 body.dark { background:#121212; color:#eee;}
 header { background:#ff4757; color:white; padding:20px; text-align:center; box-shadow:0 4px 8px rgba(0,0,0,0.1); position:sticky; top:0; z-index:100; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; transition: background 0.3s;}
@@ -205,7 +203,6 @@ body.dark .checkout-section input {background: #2a2a2a;color: white;border: 1px 
       <option value="rating-desc">Mais populares</option>
     </select>
   </div>
-  <div id="user-area" style="color:white;font-size:0.9rem;cursor:pointer"></div>
 </header>
 
 <main id="menu"></main>
@@ -328,30 +325,6 @@ body.dark .checkout-section input {background: #2a2a2a;color: white;border: 1px 
   <div id="history-items"></div>
 </div>
 
-<!-- Login Modal -->
-<div class="modal" id="login-modal">
-  <div class="modal-content">
-    <div class="modal-details">
-      <h2>🔐 Entrar</h2>
-
-      <input id="login-user" placeholder="Usuário">
-      <input id="login-pass" type="password" placeholder="Senha">
-
-      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px">
-        <button class="add-btn" style="background:#aaa" onclick="fecharLogin()">Cancelar</button>
-        <button class="add-btn" onclick="login()">Entrar</button>
-      </div>
-
-      <hr style="margin:15px 0">
-
-      <h4>Criar conta</h4>
-      <input id="cad-nome" placeholder="Nome">
-      <input id="cad-user" placeholder="Usuário">
-      <input id="cad-pass" type="password" placeholder="Senha">
-      <button class="add-btn" onclick="cadastrar()">Cadastrar</button>
-    </div>
-  </div>
-</div>
 
 <button class="cart-toggle" onclick="toggleCart()">🛒</button>
 <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
@@ -427,17 +400,9 @@ const combos = [
   }
 ];
 
-let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [
-  {
-    id: 1,
-    login: "admin",
-    senha: "123",
-    nome: "Administrador",
-    admin: true
-  }
-];
-
-let usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado")) || null;
+  const usuarios = [
+    {id: 1, login:"admin", senha:"123", nome:"Nome tal", endereco: "endereço tal", pedidos:[1,2]},
+  ]
 
   const pedidos = [
     {id:1, usuario:1, pratos:[{id:1, quantidade:1},{id:2, quantidade:2}]}
@@ -598,62 +563,6 @@ function carregarDadosCliente() {
   document.getElementById("cliente-nome").value = clienteSalvo.nome || "";
   document.getElementById("cliente-telefone").value = clienteSalvo.telefone || "";
   document.getElementById("cliente-endereco").value = clienteSalvo.endereco || "";
-}
-
-// Login/Cadastro
-function abrirLogin() {
-  document.getElementById("login-modal").classList.add("active");
-}
-
-function fecharLogin() {
-  document.getElementById("login-modal").classList.remove("active");
-}
-
-function login() {
-  const user = document.getElementById("login-user").value.trim();
-  const pass = document.getElementById("login-pass").value.trim();
-
-  const u = usuarios.find(u => u.login === user && u.senha === pass);
-
-  if (!u) {
-    showToast("Usuário ou senha inválidos", "error");
-    return;
-  }
-
-  usuarioLogado = u;
-  localStorage.setItem("usuarioLogado", JSON.stringify(u));
-  fecharLogin();
-  atualizarHeaderUsuario();
-  renderHistorico();
-  showToast(`Bem-vindo, ${u.nome}`, "success");
-}
-
-function cadastrar() {
-  const nome = document.getElementById("cad-nome").value.trim();
-  const user = document.getElementById("cad-user").value.trim();
-  const pass = document.getElementById("cad-pass").value.trim();
-
-  if (!nome || !user || !pass) {
-    showToast("Preencha todos os campos", "error");
-    return;
-  }
-
-  if (usuarios.some(u => u.login === user)) {
-    showToast("Usuário já existe", "error");
-    return;
-  }
-
-  const novo = {
-    id: Date.now(),
-    login: user,
-    senha: pass,
-    nome,
-    admin: false
-  };
-
-  usuarios.push(novo);
-  localStorage.setItem("usuarios", JSON.stringify(usuarios));
-  showToast("Conta criada! Faça login.", "success");
 }
 
 // Favoritos
@@ -1092,7 +1001,6 @@ function finalizarPedido(){
 
   const pedido = {
     id: Date.now(),
-    usuarioId: usuarioLogado ? usuarioLogado.id : null,
     data: new Date().toLocaleString(),
     pagamento: payment,
     cliente: { nome, telefone, endereco },
@@ -1246,21 +1154,6 @@ function pedirNovamente(index){
 function renderHistorico(){
   const container = document.getElementById("history-items");
   container.innerHTML = "";
-
- let pedidosFiltrados = orderHistory;
-
-  if (usuarioLogado) {
-    pedidosFiltrados = orderHistory.filter(
-      p => p.usuarioId === usuarioLogado.id
-    );
-  } else {
-    pedidosFiltrados = [];
-  }
-
-  if (pedidosFiltrados.length === 0) {
-    container.innerHTML = "<p>Faça login para ver seus pedidos.</p>";
-    return;
-  }
 
   if(orderHistory.length === 0){
     container.innerHTML = "<p>Nenhum pedido anterior.</p>";
