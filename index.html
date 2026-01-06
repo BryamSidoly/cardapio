@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cardápio Delivery Profissional</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff4757">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 <style>
@@ -36,6 +40,7 @@ main { display:grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr))
 .tag.vegan { background:#2ed573; }
 .tag.picante { background:#ff6348; }
 .tag.mais-pedido { background:#ffa502; }
+.tag.novo { background:#1e90ff; }
 
 /* Estoque */
 .stock-low { color:orange; font-weight:bold; position:absolute; top:10px; right:10px;}
@@ -43,9 +48,10 @@ main { display:grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr))
 
 /* Destaques */
 .highlight {position: absolute;top: 10px;right: 10px;background: #1e90ff;color: white;font-size: 0.75rem;padding: 4px 8px;border-radius: 20px;font-weight: bold;box-shadow: 0 2px 6px rgba(0,0,0,0.2);}
-.highlight.hot { background: #ff6348; }     /* 🔥 */
-.highlight.top { background: #ffa502; }     /* ⭐ */
-.highlight.promo { background: #2ed573; }   /* 💸 */
+.highlight.hot { background: #ff6348; }
+.highlight.top { background: #ffa502; }
+.highlight.promo { background: #2ed573; }
+.highlight.novo { background:#1e90ff; }
 
 /* Modal */
 .modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; opacity:0; pointer-events:none; transition:opacity 0.3s; z-index:200;}
@@ -116,6 +122,7 @@ body.dark #confirm-modal .modal-content {background: #1f1f1f;color: white;}
 body.dark .cart-history {background:#1f1f1f;color:white;}
 body.dark .history-item {background:#2a2a2a;}
 .fly-item {position: fixed;z-index: 9999;pointer-events: none;transition: transform 0.8s cubic-bezier(.4,0,.2,1), opacity 0.8s;border-radius: 50%;}
+.order-progress {margin-top: 8px;}
 
 /* Checkout */
 .checkout-section {margin-top: 12px;margin-bottom: 12px;display: flex;flex-direction: column;gap: 6px;font-size: 0.9rem;}
@@ -126,6 +133,13 @@ body.dark .checkout-section input {background: #2a2a2a;color: white;border: 1px 
 /* Status */
 .order-status {margin-top: 8px;font-weight: bold;font-size: 0.85rem;display: flex;align-items: center;gap: 6px;}
 .status-dot {width: 10px;height: 10px;border-radius: 50%;}
+.progress-bar {width: 100%;height: 8px;background: #ddd;border-radius: 10px;overflow: hidden;margin-top: 5px;}
+.progress-fill {height: 100%;width: 0%;background: linear-gradient(90deg, #ff4757, #ffa502);transition: width 0.6s ease;}
+.status-icons {display: flex;justify-content: space-between;margin-top: 6px;font-size: 0.85rem;}
+.status-icon {opacity: 0.3;transition: opacity 0.3s, transform 0.3s;}
+.status-icon.active {opacity: 1;transform: scale(1.2);}
+.status-icon.current {animation: pulseStatus 1s infinite;}
+@keyframes pulseStatus {0% { transform: scale(1); }50% { transform: scale(1.25); }100% { transform: scale(1); }}
 
 /* Delivery */
 .frete-progress {background: #f1f2f6;padding: 10px;border-radius: 10px;font-size: 0.9rem;}
@@ -356,7 +370,7 @@ const pratos = [
     }
   ],estoque:10,favorito:false},
   {id:2,nome:"Hambúrguer Gourmet",desc:"Pão artesanal, carne 200g, cheddar e molho especial.",preco:28.50,prepTime: 12,img:"https://images.unsplash.com/photo-1550547660-d9450f859349",categoria:"Hambúrguer",rating:5,tags:["mais-pedido"],extras:[{nome:"Bacon", preco:4, desc:"Adiciona bacon crocante"}],estoque:5,favorito:false},
-  {id:3, nome:"Sushi Mix", desc:"8 peças variadas fresquinhas, ideais para compartilhar.", preco:42.00, img:"https://images.unsplash.com/photo-1550547660-d9450f859349", categoria:"Sushi", rating:3, tags:[], extras:[], estoque:0, favorito:false},
+  {id:3, nome:"Sushi Mix", desc:"8 peças variadas fresquinhas, ideais para compartilhar.", preco:42.00, img:"https://images.unsplash.com/photo-1550547660-d9450f859349", categoria:"Sushi", rating:3, tags:["novo", "promo"], extras:[], estoque:0, favorito:false},
   {id:4, nome:"Salada Caesar", desc:"Alface, frango grelhado, croutons e molho Caesar.", preco:22.50, img:"https://images.unsplash.com/photo-1550547660-d9450f859349", categoria:"Salada", rating:4, tags:["vegano"], extras:[], estoque:8, favorito:false},
   {id:5, nome:"Espaguete à Bolonhesa", desc:"Molho caseiro e carne moída premium.", preco:30.00, img:"https://images.unsplash.com/photo-1550547660-d9450f859349", categoria:"Massa", rating:5, tags:["promo"], extras:[{nome:"Molho Especial", preco:5, desc:"Molho caseiro especial"}], estoque:12, favorito:false}
 ];
@@ -406,6 +420,7 @@ let currentModalItem = null;
 let modalQuantity = 1;
 let desconto = 0;
 let darkMode = false;
+let freteFinal = 0;
 let orderHistory = JSON.parse(localStorage.getItem("orderHistory")) || [];
 
 const clienteSalvo = JSON.parse(localStorage.getItem("cliente")) || {};
@@ -415,6 +430,11 @@ AOS.init({duration:600, once:true});
 
 // --- Funções principais ---
 function getHighlight(prato) {
+
+  if (prato.tags.includes('novo')) {
+    return { text: '🆕 Novo', class: 'novo' };
+  }
+
   if (prato.tags.includes('promo')) {
     return { text: '💸 Promoção do dia', class: 'promo' };
   }
@@ -792,7 +812,7 @@ function atualizarCarrinho(){
 
   total = total * (1 - descontoProgressivo/100) * (1 - desconto/100);
 
-  let freteFinal = 0;
+  freteFinal = 0;
 
   if (total >= FRETE_GRATIS_MINIMO) {
     freteFinal = 0;
@@ -1104,6 +1124,11 @@ function simularStatusPedido(pedidoId) {
   });
 }
 
+function getOrderProgress(statusIndex) {
+  const total = ORDER_STATUS.length - 1;
+  return Math.round((statusIndex / total) * 100);
+}
+
 function pedirNovamente(index){
   const pedido = orderHistory[index];
   if(!pedido) return;
@@ -1136,11 +1161,28 @@ function renderHistorico(){
       <strong>${pedido.data}</strong><br>
       ${pedido.total}<br>
       ${pedido.horarioAgendado ? `<div>🕒 Entregar às <strong>${pedido.horarioAgendado}</strong></div>` : ""}
-      <div class="order-status">
-        <span class="status-dot" style="background:${status.color}"></span>
-        ${status.label}
-      </div>
+        <div class="order-status">
+          <span class="status-dot" style="background:${status.color}"></span>
+          ${status.label}
+        </div>
 
+        <div class="order-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${getOrderProgress(pedido.statusIndex)}%"></div>
+          </div>
+
+          <div class="status-icons">
+            <span class="status-icon ${pedido.statusIndex >= 0 ? 'active' : ''} ${pedido.statusIndex === 0 ? 'current' : ''}">
+              👨‍🍳
+            </span>
+            <span class="status-icon ${pedido.statusIndex >= 1 ? 'active' : ''} ${pedido.statusIndex === 1 ? 'current' : ''}">
+              🛵
+            </span>
+            <span class="status-icon ${pedido.statusIndex >= 2 ? 'active' : ''} ${pedido.statusIndex === 2 ? 'current' : ''}">
+              📦
+            </span>
+          </div>
+        </div>
       <ul>${itens}</ul>
       <button onclick="pedirNovamente(${index})">Pedir novamente</button>
     `;
@@ -1200,6 +1242,17 @@ renderMenu();
 atualizarCarrinho();
 renderHistorico();
 carregarDadosCliente();
+
+// Service
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("service-worker.js")
+      .then(() => console.log("✅ Service Worker registrado"))
+      .catch(err => console.error("❌ SW erro:", err));
+  });
+}
+
 </script>
 </body>
 </html>
