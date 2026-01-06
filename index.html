@@ -325,7 +325,6 @@ body.dark .checkout-section input {background: #2a2a2a;color: white;border: 1px 
   <div id="history-items"></div>
 </div>
 
-
 <button class="cart-toggle" onclick="toggleCart()">🛒</button>
 <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
@@ -400,13 +399,13 @@ const combos = [
   }
 ];
 
-  const usuarios = [
-    {id: 1, login:"admin", senha:"123", nome:"Nome tal", endereco: "endereço tal", pedidos:[1,2]},
-  ]
+const usuarios = [
+  {id: 1, login:"admin", senha:"123", nome:"Nome tal", endereco: "endereço tal", pedidos:[1,2]},
+]
 
-  const pedidos = [
-    {id:1, usuario:1, pratos:[{id:1, quantidade:1},{id:2, quantidade:2}]}
-  ]
+const pedidos = [
+  {id:1, usuario:1, pratos:[{id:1, quantidade:1},{id:2, quantidade:2}]}
+]
 
 const upsellMap = {
   Pizza: ["Refrigerante"],
